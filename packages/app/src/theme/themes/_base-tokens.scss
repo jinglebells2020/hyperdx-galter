@@ -10,6 +10,7 @@
 
 @use './hyperdx/tokens' as hyperdx-tokens;
 @use './clickstack/tokens' as clickstack-tokens;
+@use './altailabs/tokens' as altailabs-tokens;
 
 /* Dark Mode (default fallback) - uses HyperDX tokens */
 [data-mantine-color-scheme='dark'] {

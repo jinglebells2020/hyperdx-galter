@@ -35,7 +35,7 @@ import { MantineThemeOverride } from '@mantine/core';
  * Brand theme identifier.
  * This is DEPLOYMENT-CONFIGURED, not user-selectable in production.
  */
-export type ThemeName = 'hyperdx' | 'clickstack';
+export type ThemeName = 'hyperdx' | 'clickstack' | 'altailabs';
 
 /**
  * Favicon configuration for a theme.

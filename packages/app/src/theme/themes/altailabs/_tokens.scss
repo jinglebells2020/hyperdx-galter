@@ -1,0 +1,63 @@
+/* AltaiLabs theme — design tokens.
+ *
+ * Forest-green accent palette for the AltaiLabs brand. Tokens follow
+ * the same shape as the upstream themes (brand-50..900, neutral-*).
+ * Only the brand palette and the Mantine `green` slot remap — neutrals
+ * inherit from the base layer so background/text contrast stays
+ * identical to the upstream HyperDX theme.
+ *
+ * Source values come from the AltaiLabs Brand v2 spec: G.primary
+ * (#0F3D2E) is the brand spot; the 50-900 ramp interpolates around it.
+ */
+
+/* Dark mode */
+.theme-altailabs[data-mantine-color-scheme='dark'] {
+  --palette-brand-50: #f1f0e5;
+  --palette-brand-100: #e1ece3;
+  --palette-brand-200: #d6e5dd;
+  --palette-brand-300: #b6cdc0;
+  --palette-brand-400: #7aaa94;
+  --palette-brand-500: #3a7762;
+  --palette-brand-600: #1f5c46;
+  --palette-brand-700: #163e2c;
+  --palette-brand-800: #0f3d2e;
+  --palette-brand-900: #072218;
+  --palette-brand-base: #0f3d2e;
+
+  --mantine-color-green-0: var(--palette-brand-50);
+  --mantine-color-green-1: var(--palette-brand-100);
+  --mantine-color-green-2: var(--palette-brand-200);
+  --mantine-color-green-3: var(--palette-brand-300);
+  --mantine-color-green-4: var(--palette-brand-400);
+  --mantine-color-green-5: var(--palette-brand-500);
+  --mantine-color-green-6: var(--palette-brand-600);
+  --mantine-color-green-7: var(--palette-brand-700);
+  --mantine-color-green-8: var(--palette-brand-800);
+  --mantine-color-green-9: var(--palette-brand-900);
+}
+
+/* Light mode — same palette, designed to work on both schemes */
+.theme-altailabs[data-mantine-color-scheme='light'] {
+  --palette-brand-50: #f1f0e5;
+  --palette-brand-100: #e1ece3;
+  --palette-brand-200: #d6e5dd;
+  --palette-brand-300: #b6cdc0;
+  --palette-brand-400: #7aaa94;
+  --palette-brand-500: #3a7762;
+  --palette-brand-600: #1f5c46;
+  --palette-brand-700: #163e2c;
+  --palette-brand-800: #0f3d2e;
+  --palette-brand-900: #072218;
+  --palette-brand-base: #0f3d2e;
+
+  --mantine-color-green-0: var(--palette-brand-50);
+  --mantine-color-green-1: var(--palette-brand-100);
+  --mantine-color-green-2: var(--palette-brand-200);
+  --mantine-color-green-3: var(--palette-brand-300);
+  --mantine-color-green-4: var(--palette-brand-400);
+  --mantine-color-green-5: var(--palette-brand-500);
+  --mantine-color-green-6: var(--palette-brand-600);
+  --mantine-color-green-7: var(--palette-brand-700);
+  --mantine-color-green-8: var(--palette-brand-800);
+  --mantine-color-green-9: var(--palette-brand-900);
+}

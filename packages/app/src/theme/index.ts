@@ -1,5 +1,6 @@
 import { z } from 'zod';
 
+import { altailabsTheme } from './themes/altailabs';
 import { clickstackTheme } from './themes/clickstack';
 import { hyperdxTheme } from './themes/hyperdx';
 import { ThemeConfig, ThemeName } from './types';
@@ -51,7 +52,7 @@ const faviconConfigSchema = z.object({
 });
 
 const themeConfigSchema = z.object({
-  name: z.enum(['hyperdx', 'clickstack']),
+  name: z.enum(['hyperdx', 'clickstack', 'altailabs']),
   displayName: z.string().min(1),
   cssClass: z.string().min(1),
   favicon: faviconConfigSchema,
@@ -108,6 +109,7 @@ function validateThemeConfig(
 try {
   validateThemeConfig(hyperdxTheme, 'hyperdx');
   validateThemeConfig(clickstackTheme, 'clickstack');
+  validateThemeConfig(altailabsTheme, 'altailabs');
 } catch (error) {
   // Log error but don't crash - fallback to default theme
   console.error(
@@ -124,6 +126,7 @@ try {
 export const themes: Record<ThemeName, ThemeConfig> = {
   hyperdx: hyperdxTheme,
   clickstack: clickstackTheme,
+  altailabs: altailabsTheme,
 };
 
 // Check if we're in development/local mode
