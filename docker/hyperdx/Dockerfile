@@ -76,13 +76,13 @@ WORKDIR /app
 # Copy pre-built common-utils from its dedicated build stage
 COPY --from=common-utils-builder /app/packages/common-utils ./packages/common-utils
 
-COPY --from=api ./src ./packages/api/src
-COPY --from=api ./bin ./packages/api/bin
-COPY --from=app ./src ./packages/app/src
-COPY --from=app ./pages ./packages/app/pages
-COPY --from=app ./public ./packages/app/public
-COPY --from=app ./styles ./packages/app/styles
-COPY --from=app ./types ./packages/app/types
+COPY packages/api/src ./packages/api/src
+COPY packages/api/bin ./packages/api/bin
+COPY packages/app/src ./packages/app/src
+COPY packages/app/pages ./packages/app/pages
+COPY packages/app/public ./packages/app/public
+COPY packages/app/styles ./packages/app/styles
+COPY packages/app/types ./packages/app/types
 
 ENV NEXT_TELEMETRY_DISABLED=1
 ENV NEXT_OUTPUT_STANDALONE=true
@@ -126,7 +126,7 @@ COPY --chown=node:node --from=builder /app/packages/app/.next/static ./packages/
 COPY --chown=node:node --from=builder /app/packages/app/public ./packages/app/packages/app/public
 
 # Set up start script
-COPY --chown=node:node --from=hyperdx ./entry.prod.sh /etc/local/entry.sh
+COPY --chown=node:node docker/hyperdx/entry.prod.sh /etc/local/entry.sh
 
 HEALTHCHECK --interval=30s --timeout=5s --start-period=30s --retries=3 \
     CMD node -e "require('http').get('http://localhost:8000/health',r=>r.statusCode===200?process.exit(0):process.exit(1)).on('error',()=>process.exit(1))"
@@ -154,16 +154,16 @@ COPY --from=node_base /usr/lib /usr/lib
 COPY --from=node_base /usr/local/include /usr/local/include
 
 # Set up Clickhouse
-COPY --from=clickhouse ./local/*.xml /etc/clickhouse-server
-COPY --from=hyperdx ./clickhouseConfig.xml /etc/clickhouse-server/config.xml
+COPY docker/clickhouse/local/*.xml /etc/clickhouse-server
+COPY docker/hyperdx/clickhouseConfig.xml /etc/clickhouse-server/config.xml
 
 # Set up Otel Collector
-COPY --from=otel-collector ./config.yaml /etc/otelcol-contrib/config.yaml
-COPY --from=otel-collector ./supervisor_docker.yaml.tmpl /etc/otel/supervisor.yaml.tmpl
-COPY --from=otel-collector ./schema /etc/otel/schema
+COPY docker/otel-collector/config.yaml /etc/otelcol-contrib/config.yaml
+COPY docker/otel-collector/supervisor_docker.yaml.tmpl /etc/otel/supervisor.yaml.tmpl
+COPY docker/otel-collector/schema /etc/otel/schema
 
 # Copy otel-collector entrypoint script
-COPY --from=otel-collector --chmod=755 ./entrypoint.sh /otel-entrypoint.sh
+COPY --chmod=755 docker/otel-collector/entrypoint.sh /otel-entrypoint.sh
 
 # Copy gomplate binary from the gomplate image
 COPY --from=gomplate /bin/gomplate /usr/local/bin/gomplate
@@ -193,7 +193,7 @@ ENV NODE_ENV=production
 
 # Set up App
 COPY --from=prod /app /app
-COPY --from=hyperdx ./entry.local.base.sh /etc/local/entry.base.sh
+COPY docker/hyperdx/entry.local.base.sh /etc/local/entry.base.sh
 
 # Copy VEX exception files for Docker Scout vulnerability suppression
 # Reference via: docker scout cves --vex-location /etc/vex/ <image>
@@ -215,7 +215,7 @@ LABEL org.opencontainers.image.vendor="HyperDX" \
       org.opencontainers.image.source="https://github.com/hyperdxio/hyperdx" \
       org.opencontainers.image.licenses="MIT"
 
-COPY --from=hyperdx ./entry.local.noauth.sh /etc/local/entry.sh
+COPY docker/hyperdx/entry.local.noauth.sh /etc/local/entry.sh
 
 HEALTHCHECK --interval=30s --timeout=5s --start-period=60s --retries=3 \
     CMD curl -f http://localhost:8080/api/health || exit 1
@@ -231,7 +231,7 @@ LABEL org.opencontainers.image.vendor="HyperDX" \
       org.opencontainers.image.source="https://github.com/hyperdxio/hyperdx" \
       org.opencontainers.image.licenses="MIT"
 
-COPY --from=hyperdx ./entry.local.auth.sh /etc/local/entry.sh
+COPY docker/hyperdx/entry.local.auth.sh /etc/local/entry.sh
 
 HEALTHCHECK --interval=30s --timeout=5s --start-period=60s --retries=3 \
     CMD curl -f http://localhost:8080/api/health || exit 1
