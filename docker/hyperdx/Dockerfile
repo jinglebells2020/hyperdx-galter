@@ -29,8 +29,8 @@ ARG OTEL_COLLECTOR_CORE_VERSION
 COPY --from=ocb-bin /usr/local/bin/ocb /usr/local/bin/ocb
 WORKDIR /build
 COPY packages/otel-collector/builder-config.yaml .
-RUN --mount=type=cache,target=/go/pkg/mod \
-    --mount=type=cache,target=/root/.cache/go-build \
+RUN --mount=type=cache,target=/go/pkg/mod,id=s/ocb-gomod \
+    --mount=type=cache,target=/root/.cache/go-build,id=s/ocb-build \
     sed -i "s/__OTEL_COLLECTOR_VERSION__/${OTEL_COLLECTOR_VERSION}/g; s/__OTEL_COLLECTOR_CORE_VERSION__/${OTEL_COLLECTOR_CORE_VERSION}/g" builder-config.yaml && \
     CGO_ENABLED=0 ocb --config=builder-config.yaml
 
@@ -59,7 +59,7 @@ RUN apk add --no-cache libc6-compat
 
 # Use BuildKit cache mount to persist Yarn download cache across builds,
 # so unchanged packages aren't re-downloaded even when yarn.lock changes.
-RUN --mount=type=cache,target=/root/.yarn/berry/cache \
+RUN --mount=type=cache,target=/root/.yarn/berry/cache,id=s/yarn-cache-1 \
     yarn install --mode=skip-build && yarn cache clean
 
 
@@ -92,7 +92,7 @@ ENV NEXT_OUTPUT_STANDALONE=true
 ENV NEXT_PUBLIC_IS_LOCAL_MODE=false
 RUN yarn workspace @hyperdx/api run build && \
     yarn workspace @hyperdx/app run build
-RUN --mount=type=cache,target=/root/.yarn/berry/cache \
+RUN --mount=type=cache,target=/root/.yarn/berry/cache,id=s/yarn-cache-2 \
     rm -rf node_modules && yarn workspaces focus @hyperdx/api --production
 
 
