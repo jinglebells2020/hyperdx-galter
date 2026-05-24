@@ -3,9 +3,10 @@ import React from 'react';
 import Logomark from './Logomark';
 
 /**
- * AltaiLabs Wordmark — italic-A + uppercase "ALTAILABS".
+ * Mooldir Wordmark — italic-M + uppercase "MOOLDIR".
  *
- * Typography per the AltaiLabs brand book:
+ * Typography per the Mooldir brand book (derived from the AltaiLabs
+ * Brand v2 spec, reused for Mooldir's accountant-facing product):
  *   - Family: Barlow Condensed (free open-source stand-in until Trade
  *     Gothic Condensed No. 18 is licensed).
  *   - Weight: 500, uppercase, tracking 0.02em.
@@ -37,8 +38,8 @@ export default function Wordmark() {
           lineHeight: 1,
         }}
       >
-        <span style={{ fontStyle: 'italic', marginRight: '0.02em' }}>A</span>
-        <span style={{ fontStyle: 'normal' }}>LTAILABS</span>
+        <span style={{ fontStyle: 'italic', marginRight: '0.02em' }}>M</span>
+        <span style={{ fontStyle: 'normal' }}>OOLDIR</span>
       </span>
     </div>
   );

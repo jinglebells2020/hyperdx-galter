@@ -168,7 +168,7 @@ export const UserPreferencesModal = ({
                 </Tooltip>
               </Group>
             }
-            description="Switch between HyperDX and ClickStack branding"
+            description="Switch between brand themes (dev only)"
           >
             <Select
               value={themeName}

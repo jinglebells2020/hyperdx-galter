@@ -91,7 +91,7 @@ export default function CareersPage() {
   return (
     <Container size="md" py="xl">
       <Head>
-        <title>Careers | HyperDX</title>
+        <title>Careers | Mooldir</title>
       </Head>
       <Stack gap="lg">
         <Title order={1}>

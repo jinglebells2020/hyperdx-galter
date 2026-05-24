@@ -6,7 +6,7 @@ import Wordmark from './Wordmark';
 
 export const altailabsTheme: ThemeConfig = {
   name: 'altailabs',
-  displayName: 'AltaiLabs',
+  displayName: 'Mooldir',
   mantineTheme: theme,
   Wordmark,
   Logomark,
