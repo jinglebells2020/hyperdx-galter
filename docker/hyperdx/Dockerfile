@@ -87,6 +87,12 @@ COPY packages/app/types ./packages/app/types
 ENV NEXT_TELEMETRY_DISABLED=1
 ENV NEXT_OUTPUT_STANDALONE=true
 ENV NEXT_PUBLIC_IS_LOCAL_MODE=false
+# Next.js inlines NEXT_PUBLIC_* at BUILD time. The theme selector reads
+# process.env.NEXT_PUBLIC_THEME (see packages/app/src/theme/index.ts) so
+# the value must be present during `next build`. Railway's runtime env
+# vars don't reach this stage unless declared as ARG here.
+ARG NEXT_PUBLIC_THEME=hyperdx
+ENV NEXT_PUBLIC_THEME=${NEXT_PUBLIC_THEME}
 RUN yarn workspace @hyperdx/api run build && \
     yarn workspace @hyperdx/app run build
 RUN    rm -rf node_modules && yarn workspaces focus @hyperdx/api --production
