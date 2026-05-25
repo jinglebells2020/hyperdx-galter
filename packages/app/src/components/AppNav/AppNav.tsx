@@ -18,6 +18,7 @@ import { useDisclosure, useLocalStorage } from '@mantine/hooks';
 import {
   IconArrowBarToLeft,
   IconBell,
+  IconBriefcase,
   IconChartDots,
   IconDeviceFloppy,
   IconDeviceLaptop,
@@ -78,6 +79,13 @@ const NAV_LINKS: NavLinkConfig[] = [
     label: 'Alerts',
     href: '/alerts',
     icon: <IconBell size={16} />,
+    cloudOnly: true,
+  },
+  {
+    id: 'cases',
+    label: 'Дела',
+    href: '/cases',
+    icon: <IconBriefcase size={16} />,
     cloudOnly: true,
   },
   {

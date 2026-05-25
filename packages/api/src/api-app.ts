@@ -98,6 +98,7 @@ app.use('/mcp', mcpRouter);
 // PRIVATE ROUTES
 app.use('/ai', isUserAuthenticated, routers.aiRouter);
 app.use('/alerts', isUserAuthenticated, routers.alertsRouter);
+app.use('/cases', isUserAuthenticated, routers.casesRouter);
 app.use('/dashboards', isUserAuthenticated, routers.dashboardRouter);
 app.use('/me', isUserAuthenticated, routers.meRouter);
 app.use('/team', isUserAuthenticated, routers.teamRouter);
