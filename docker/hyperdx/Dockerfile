@@ -244,3 +244,11 @@ HEALTHCHECK --interval=30s --timeout=5s --start-period=60s --retries=3 \
 
 ENTRYPOINT ["sh", "/etc/local/entry.sh"]
 
+
+# Default build target for Railway (multi-tenant, external Mongo + CH).
+# Docker builds the last stage when no --target is specified, and the
+# `prod` stage is what Railway should ship — `all-in-one-auth` above is
+# only for single-host Docker setups with embedded Mongo + CH, which
+# doesn't apply here (we use the external services already provisioned
+# in the Railway project).
+FROM prod
