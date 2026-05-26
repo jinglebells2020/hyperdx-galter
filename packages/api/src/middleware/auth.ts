@@ -113,6 +113,36 @@ export function isUserAuthenticated(
       userEmail: req.user?.email,
     });
 
+    // FIB §51 — single-session enforcement. If the user logged in again
+    // elsewhere, the recorded `activeSessionId` will no longer match this
+    // session id and we evict this session. Lazy-imported to keep this
+    // module dependency-light during tests that stub Mongo.
+    const sessionId = (req as any).sessionID as string | undefined;
+    const userId = (req.user as any)?._id;
+    if (userId && sessionId) {
+      // We fire-and-forget the touch; concurrency on lastSeenAt is tolerable.
+      void (async () => {
+        try {
+          const { isCurrentSessionStillActive, touchLastSeen } = await import(
+            '@/services/loginGuard'
+          );
+          const ok = await isCurrentSessionStillActive(userId, sessionId);
+          if (!ok) {
+            // Tear down the session so the next call gets a 401.
+            try {
+              (req as any).session?.destroy?.(() => {});
+            } catch {
+              // ignore
+            }
+          } else {
+            await touchLastSeen(userId);
+          }
+        } catch (err) {
+          logger.error({ err }, 'isUserAuthenticated post-check failed');
+        }
+      })();
+    }
+
     return next();
   }
   res.sendStatus(401);

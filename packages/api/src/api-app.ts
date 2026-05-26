@@ -23,6 +23,17 @@ import passport from './utils/passport';
 
 const app: express.Application = express();
 
+// FIB §50-52 (KZ State Technical Service certification) — session must:
+//   - secure  (sent only over HTTPS)
+//   - httpOnly (not readable by JS)
+//   - sameSite=strict (CSRF-resistant)
+//   - idle timeout enforced by store
+//   - max lifetime 24 hours (was 30 days)
+// Rolling=true means each request bumps `expires` to now + maxAge, giving
+// an effective idle timeout of 24h. Absolute lifetime is bounded by
+// passport-local-mongoose token issuance and our HDX_SESSION_ABSOLUTE_MAX_DAYS
+// cron sweep (see services/sessionSweep.ts).
+const HDX_SESSION_IDLE_MS = 1000 * 60 * 60 * 24; // 24 h idle
 const sess: session.SessionOptions & { cookie: session.CookieOptions } = {
   // Use a slot-specific cookie name in dev so multiple worktrees on localhost
   // don't overwrite each other's session cookies.
@@ -33,9 +44,10 @@ const sess: session.SessionOptions & { cookie: session.CookieOptions } = {
   saveUninitialized: false,
   secret: config.EXPRESS_SESSION_SECRET,
   cookie: {
-    secure: false,
-    sameSite: 'lax',
-    maxAge: 1000 * 60 * 60 * 24 * 30, // 30 days
+    secure: !config.IS_DEV,
+    httpOnly: true,
+    sameSite: 'strict',
+    maxAge: HDX_SESSION_IDLE_MS,
   },
   rolling: true,
   store: new MongoStore({ mongoUrl: config.MONGO_URI }),
@@ -45,9 +57,6 @@ app.set('trust proxy', 1);
 if (!config.IS_CI && config.FRONTEND_URL) {
   const feUrl = new URL(config.FRONTEND_URL);
   sess.cookie.domain = feUrl.hostname;
-  if (feUrl.protocol === 'https:') {
-    sess.cookie.secure = true;
-  }
 }
 
 app.disable('x-powered-by');
@@ -98,6 +107,7 @@ app.use('/mcp', mcpRouter);
 // PRIVATE ROUTES
 app.use('/ai', isUserAuthenticated, routers.aiRouter);
 app.use('/alerts', isUserAuthenticated, routers.alertsRouter);
+app.use('/audit', isUserAuthenticated, routers.auditRouter);
 app.use('/cases', isUserAuthenticated, routers.casesRouter);
 app.use('/dashboards', isUserAuthenticated, routers.dashboardRouter);
 app.use('/me', isUserAuthenticated, routers.meRouter);

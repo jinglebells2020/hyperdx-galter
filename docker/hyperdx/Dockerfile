@@ -113,6 +113,17 @@ ENV CODE_VERSION=$CODE_VERSION
 ENV OTEL_RESOURCE_ATTRIBUTES="service.version=$CODE_VERSION"
 ENV NODE_ENV=production
 
+# FIB §44 / OSI §2.6 — set timezone to UTC for log consistency and install
+# tzdata + ca-certificates for outbound TLS. NTP synchronisation to UTC(kz)
+# must happen at the host / orchestrator level (Railway runs chrony per
+# their docs; for self-hosted bare-metal see docs/deployment-hardening.md).
+# The container exposes /etc/mooldir-time-policy declaring the requirement
+# so startup checks can verify the host is in sync.
+RUN apk add --no-cache tzdata ca-certificates && \
+    cp /usr/share/zoneinfo/UTC /etc/localtime && \
+    echo 'UTC' > /etc/timezone
+COPY docker/hyperdx/mooldir-time-policy /etc/mooldir-time-policy
+
 # Remove package managers from production image (not needed at runtime)
 RUN rm -rf /usr/local/lib/node_modules/npm /usr/local/lib/node_modules/corepack \
     /usr/local/bin/npm /usr/local/bin/npx /usr/local/bin/corepack \

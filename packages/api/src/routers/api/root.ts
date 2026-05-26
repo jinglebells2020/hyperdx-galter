@@ -13,6 +13,7 @@ import { createTeam, isTeamExisting } from '@/controllers/team';
 import { handleAuthError, redirectToDashboard } from '@/middleware/auth';
 import TeamInvite from '@/models/teamInvite';
 import User from '@/models/user'; // TODO -> do not import model directly
+import { recordAudit } from '@/services/audit';
 import { setupTeamDefaults } from '@/setupDefaults';
 import logger from '@/utils/logger';
 import passport from '@/utils/passport';
@@ -138,10 +139,23 @@ router.post(
 );
 
 router.get('/logout', (req, res, next) => {
+  const actor = req.user as any;
   req.logout(function (err) {
     if (err) {
       return next(err);
     }
+    // FIB §1 — record logout. Fire-and-forget; ignore failures.
+    void recordAudit(
+      {
+        category: 'auth',
+        action: 'logout',
+        outcome: 'success',
+        actorUserId: actor?._id,
+        actorEmail: actor?.email,
+        teamId: actor?.team,
+      },
+      req,
+    );
     res.redirect(`${config.FRONTEND_URL}/login`);
   });
 });

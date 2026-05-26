@@ -18,6 +18,7 @@ import { useBrandDisplayName } from './theme/ThemeProvider';
 import api from './api';
 import * as config from './config';
 import LandingHeader from './LandingHeader';
+import LoginBanner from './LoginBanner';
 import { CheckOrX, PasswordCheck } from './PasswordCheck';
 
 type FormData = {
@@ -150,6 +151,7 @@ export default function AuthPage({ action }: { action: 'register' | 'login' }) {
               Let{"'"}s create your user account.
             </div>
           )}
+          <LoginBanner />
           <form className="text-start mt-4" {...form.controller}>
             <Stack gap="xl">
               <Paper p={34} shadow="md" radius="md">

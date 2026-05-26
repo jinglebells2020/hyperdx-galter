@@ -5,6 +5,7 @@ import { serializeError } from 'serialize-error';
 
 import * as config from '@/config';
 import Server from '@/server';
+import { startClockDriftMonitor } from '@/tasks/clockDriftMonitor';
 import { isOperationalError } from '@/utils/errors';
 import logger from '@/utils/logger';
 
@@ -38,3 +39,8 @@ process.on('unhandledRejection', (err: any) => {
 server
   .start()
   .catch(e => logger.error({ err: serializeError(e) }, 'Server start failed'));
+
+// FIB §44 — supervise host clock drift against UTC(kz) approved servers.
+if (!config.IS_CI) {
+  startClockDriftMonitor();
+}
