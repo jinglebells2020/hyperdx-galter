@@ -333,6 +333,73 @@ const api = {
       },
     });
   },
+  // FIB §54 — Login-history surface for the authenticated user.
+  useLoginHistory() {
+    return useQuery<{
+      role: string;
+      lastLoginAt: string | null;
+      lastLoginIp: string | null;
+      lastFailedLoginAt: string | null;
+      lastFailedLoginIp: string | null;
+      failedLoginCountSinceLastSuccess: number;
+      passwordChangedAt: string | null;
+      passwordExpiresAt: string | null;
+      mustChangePasswordOnNextLogin: boolean;
+    } | null>({
+      queryKey: [`me/login-history`],
+      queryFn: () => {
+        if (IS_LOCAL_MODE) {
+          return null;
+        }
+        return hdxServer(`me/login-history`).json();
+      },
+    });
+  },
+  // FIB §3-5 — Audit search (securityAdmin-gated server-side).
+  useAuditEvents(filters: Record<string, string | undefined> = {}) {
+    return useQuery<{
+      events: Array<{
+        _id: string;
+        ts: string;
+        actorUserId?: string;
+        actorEmail?: string;
+        actorIp?: string;
+        actorUserAgent?: string;
+        sessionId?: string;
+        category: string;
+        action: string;
+        outcome: string;
+        objectKind?: string;
+        objectId?: string;
+        details?: Record<string, unknown>;
+        errorMessage?: string;
+        teamId?: string;
+      }>;
+      nextCursor: string | null;
+    } | null>({
+      queryKey: [`audit/events`, filters],
+      queryFn: () => {
+        if (IS_LOCAL_MODE) {
+          return null;
+        }
+        const searchParams = new URLSearchParams();
+        Object.entries(filters).forEach(([k, v]) => {
+          if (v != null && v !== '') searchParams.set(k, v);
+        });
+        return hdxServer(`audit/events?${searchParams.toString()}`).json();
+      },
+    });
+  },
+  useChangePassword() {
+    return useMutation<
+      { status: 'success' },
+      HTTPError,
+      { oldPassword: string; newPassword: string; confirmPassword: string }
+    >({
+      mutationFn: async body =>
+        hdxServer(`me/password-change`, { method: 'POST', json: body }).json(),
+    });
+  },
   useTeam() {
     return useQuery({
       queryKey: [`team`],

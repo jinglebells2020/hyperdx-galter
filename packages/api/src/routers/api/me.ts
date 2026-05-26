@@ -1,9 +1,12 @@
 import type { MeApiResponse } from '@hyperdx/common-utils/dist/types';
 import express from 'express';
+import { z } from 'zod';
+import { validateRequest } from 'zod-express-middleware';
 
 import { AI_API_KEY, ANTHROPIC_API_KEY, USAGE_STATS_ENABLED } from '@/config';
 import { getTeam } from '@/controllers/team';
 import User from '@/models/user';
+import { changeUserPassword } from '@/services/passwordPolicy';
 import { Api404Error } from '@/utils/errors';
 import { sendJson } from '@/utils/serialization';
 
@@ -43,6 +46,57 @@ router.get('/', async (req, res: express.Response<MeApiResponse>, next) => {
     next(e);
   }
 });
+
+// FIB §24 — password change requiring old + new, with history + expiration
+// enforcement. New password must not reuse any of the last 5 hashes.
+const changePasswordSchema = z
+  .object({
+    oldPassword: z.string().min(1),
+    newPassword: z
+      .string()
+      .min(12, 'Password must have at least 12 characters')
+      .refine(
+        pass => /[a-z]/.test(pass) && /[A-Z]/.test(pass),
+        'Password must include both lower and upper case characters',
+      )
+      .refine(
+        pass => /\d/.test(pass),
+        'Password must include at least one number',
+      )
+      .refine(
+        pass => /[!@#$%^&*(),.?":{}|<>;\-+=]/.test(pass),
+        'Password must include at least one special character',
+      ),
+    confirmPassword: z.string(),
+  })
+  .refine(data => data.newPassword === data.confirmPassword, {
+    message: "Passwords don't match",
+    path: ['confirmPassword'],
+  });
+
+router.post(
+  '/password-change',
+  validateRequest({ body: changePasswordSchema }),
+  async (req, res, next) => {
+    try {
+      if (req.user == null) {
+        throw new Api404Error('Request without user found');
+      }
+      const result = await changeUserPassword({
+        actor: req.user as any,
+        oldPassword: req.body.oldPassword,
+        newPassword: req.body.newPassword,
+        req,
+      });
+      if (result.ok) {
+        return res.json({ status: 'success' });
+      }
+      return res.status(400).json({ error: result.code, message: result.message });
+    } catch (e) {
+      next(e);
+    }
+  },
+);
 
 // FIB §54 — surface last successful login + failed-attempt counter to the
 // authenticated user so they can detect credential abuse. Read-only.

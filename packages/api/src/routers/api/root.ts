@@ -14,6 +14,10 @@ import { handleAuthError, redirectToDashboard } from '@/middleware/auth';
 import TeamInvite from '@/models/teamInvite';
 import User from '@/models/user'; // TODO -> do not import model directly
 import { recordAudit } from '@/services/audit';
+import {
+  initialiseUserPassword,
+  newPasswordExpiry,
+} from '@/services/passwordPolicy';
 import { setupTeamDefaults } from '@/setupDefaults';
 import logger from '@/utils/logger';
 import passport from '@/utils/passport';
@@ -106,7 +110,26 @@ router.post(
           });
           user.team = team._id;
           user.name = email;
+          // FIB §33 — first registered user is promoted to securityAdmin so
+          // they can audit the system. Subsequent registrations remain
+          // 'user' until a securityAdmin promotes them.
+          user.role = 'securityAdmin';
+          // FIB §24 — start the 90-day password-expiration clock.
+          user.passwordChangedAt = new Date();
+          user.passwordExpiresAt = newPasswordExpiry();
           await user.save();
+          await recordAudit(
+            {
+              category: 'user',
+              action: 'user.created',
+              outcome: 'success',
+              actorUserId: user._id,
+              actorEmail: user.email,
+              teamId: user.team,
+              details: { bootstrap: true, role: 'securityAdmin' },
+            },
+            req,
+          );
 
           // Set up default connections and sources for this new team
           try {
