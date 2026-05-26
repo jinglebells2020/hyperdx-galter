@@ -5,6 +5,7 @@ import { serializeError } from 'serialize-error';
 
 import * as config from '@/config';
 import Server from '@/server';
+import { runCertComplianceCheck } from '@/tasks/certComplianceCheck';
 import { startClockDriftMonitor } from '@/tasks/clockDriftMonitor';
 import { isOperationalError } from '@/utils/errors';
 import logger from '@/utils/logger';
@@ -43,4 +44,10 @@ server
 // FIB §44 — supervise host clock drift against UTC(kz) approved servers.
 if (!config.IS_CI) {
   startClockDriftMonitor();
+}
+
+// Run the FIB / OSI / OPOIB startup compliance check and surface any
+// failed gates in the boot log so operators can spot them in HyperDX.
+if (!config.IS_CI && !config.IS_DEV) {
+  runCertComplianceCheck();
 }

@@ -41,12 +41,28 @@ describe('passwordPolicy (FIB §24 — KZ certification)', () => {
     expect(diffDays).toBe(PASSWORD_EXPIRY_DAYS);
   });
 
-  it('initialiseUserPassword stamps history + expiry', async () => {
+  it('initialiseUserPassword stamps expiry and leaves history empty', async () => {
     const u = await makeUser('First-Password-1!');
-    expect(u?.passwordHistory).toHaveLength(1);
+    // History is empty after initialise. The current hash is on the user
+    // document itself; subsequent changeUserPassword calls will push the
+    // previous hash to history. Reuse of the CURRENT password is rejected
+    // separately via authenticate(newPassword).
+    expect(u?.passwordHistory ?? []).toHaveLength(0);
     expect(u?.passwordChangedAt).toBeTruthy();
     expect(u?.passwordExpiresAt).toBeTruthy();
     expect(u?.mustChangePasswordOnNextLogin).toBe(false);
+  });
+
+  it('rejects reuse of the CURRENT password (FIB §24 reuse_current)', async () => {
+    const u = await makeUser('Current-Pwd-1!');
+    const r = await changeUserPassword({
+      actor: u!,
+      oldPassword: 'Current-Pwd-1!',
+      newPassword: 'Current-Pwd-1!',
+      req: fakeReq(),
+    });
+    expect(r.ok).toBe(false);
+    if (!r.ok) expect(r.code).toBe('reuse');
   });
 
   it('changeUserPassword rejects wrong old password', async () => {

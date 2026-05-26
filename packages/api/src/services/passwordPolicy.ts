@@ -109,9 +109,19 @@ export async function changeUserPassword(
     };
   }
 
-  // Reuse check.
-  const reuses = await candidateMatchesAnyHistory(actor as any, newPassword);
-  if (reuses) {
+  // FIB §24 reuse check — refuse the *current* password and any of the
+  // last PASSWORD_HISTORY_LENGTH past passwords. Current is checked by
+  // re-running authenticate(newPassword); history is checked by the
+  // serialised-blob comparison.
+  const reusesCurrent = await new Promise<boolean>(resolve => {
+    (actor as any).authenticate(newPassword, (_err: any, ok: any) => {
+      resolve(!!ok);
+    });
+  });
+  const reusesHistory =
+    !reusesCurrent &&
+    (await candidateMatchesAnyHistory(actor as any, newPassword));
+  if (reusesCurrent || reusesHistory) {
     await auditResource(
       'user',
       'password.changed',
@@ -121,7 +131,7 @@ export async function changeUserPassword(
         actorUserId: actor._id,
         actorEmail: actor.email,
         teamId: actor.team,
-        details: { reason: 'reuse' },
+        details: { reason: reusesCurrent ? 'reuse_current' : 'reuse_history' },
       },
       req,
       'denied',
@@ -129,7 +139,7 @@ export async function changeUserPassword(
     return {
       ok: false,
       code: 'reuse',
-      message: `New password must not match any of the last ${PASSWORD_HISTORY_LENGTH} passwords.`,
+      message: `New password must not match the current password or any of the last ${PASSWORD_HISTORY_LENGTH} passwords.`,
     };
   }
 
@@ -141,7 +151,9 @@ export async function changeUserPassword(
     });
   });
 
-  // Update history + expiration. Cap history at PASSWORD_HISTORY_LENGTH.
+  // Push the OLD hash to history (not the new one — the new one is the
+  // current password and is checked separately above). Cap at
+  // PASSWORD_HISTORY_LENGTH.
   const newHistory = [
     ...(actor.passwordHistory ?? []),
     previousBlob
@@ -187,10 +199,11 @@ export async function initialiseUserPassword(
       resolve();
     });
   });
-  const blob = serializePlmHashBlob(user as any);
-  user.passwordHistory = blob
-    ? [{ hash: blob, changedAt: new Date() }].slice(-PASSWORD_HISTORY_LENGTH)
-    : [];
+  // Initial password — leave history empty. Subsequent changes will push
+  // the previous hash. The CURRENT hash is checked separately on
+  // each change via authenticate(newPassword), so leaving history empty
+  // does not let A→A reuse slip through.
+  user.passwordHistory = [];
   user.passwordChangedAt = new Date();
   user.passwordExpiresAt = newPasswordExpiry();
   user.mustChangePasswordOnNextLogin = false;
